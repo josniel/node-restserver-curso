@@ -3,9 +3,10 @@ const bcrypt = require('bcrypt');
 const _ = require('underscore');
 const User = require('../models/user');
 const user = require('../models/user');
+const { verifyToken, verifyAdmin_Role } = require('../middlewares/authentication');
 const app = express();
 
-app.get('/user', function(req, res) {
+app.get('/user', verifyToken, function(req, res) {
 
     let since = req.query.since || 0;
     since = Number(since);
@@ -31,7 +32,7 @@ app.get('/user', function(req, res) {
         });
 });
 
-app.post('/user', function(req, res) {
+app.post('/user', [verifyToken, verifyAdmin_Role], function(req, res) {
     let body = req.body;
     let user = new User({
         name: body.name,
@@ -56,7 +57,7 @@ app.post('/user', function(req, res) {
     });
 });
 
-app.put('/user/:id', function(req, res) {
+app.put('/user/:id', [verifyToken, verifyAdmin_Role], function(req, res) {
     let id = req.params.id;
     let body = _.pick(req.body, ['name', 'email', 'img', 'role', 'status']);
     User.findByIdAndUpdate(id, body, { new: true, runValidators: true }, (err, userDB) => {
@@ -74,7 +75,7 @@ app.put('/user/:id', function(req, res) {
 
 });
 
-app.delete('/user/:id', function(req, res) {
+app.delete('/user/:id', [verifyToken, verifyAdmin_Role], function(req, res) {
     let id = req.params.id;
     let changeStatus = {
         status: false
